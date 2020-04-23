@@ -16,6 +16,20 @@ jobs:
     environment:
       SBT_VERSION: 1.3.7
     steps:
+      - run:
+          name: Setup Mysql
+          command: |
+            sudo apt-get update && sudo apt-get install default-mysql-client
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+      - run:
+          name: Create DB
+          command: |
+            mysql -h 127.0.0.1 -u root -prootpw --execute="CREATE USER 'circleci'@'%';"
+            mysql -h 127.0.0.1 -u root -prootpw --execute="GRANT ALL PRIVILEGES ON *.* TO 'circleci'@'%';"
+            mysql -h 127.0.0.1 -u root -prootpw --execute="FLUSH PRIVILEGES;"
+            mysql -h 127.0.0.1 -u root -prootpw --execute="CREATE DATABASE circle_test;"
       - run: echo 'export ARTIFACT_BUILD=$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM.zip' >> $BASH_ENV
       - run:
           name: Get sbt binary
